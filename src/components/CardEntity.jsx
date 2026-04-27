@@ -31,7 +31,7 @@ export default function CardEntity({
       type="button"
       onClick={() => onSelect(entity.id)}
       onPointerDown={(event) => onPointerDown(entity.id, event)}
-      className="absolute left-0 top-0 h-[8.33%] w-[8.33%] preserve-3d text-left"
+      className="absolute left-0 top-0 h-[8.33%] w-[8.33%] preserve-3d cursor-grab text-left active:cursor-grabbing"
       style={cardStyle}
     >
       <div className="pointer-events-none absolute -top-7 left-1 flex gap-1 preserve-3d">

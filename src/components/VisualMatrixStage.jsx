@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import CardEntity from "./CardEntity";
 
-const clampGrid = (value) => Math.max(0, Math.min(11, value));
+const clampDragGrid = (value) => Math.max(0, Math.min(11.5, value));
+const clampCommitGrid = (value) => Math.max(0, Math.min(11, value));
 
 export default function VisualMatrixStage({
   cameraPreset,
@@ -19,7 +20,7 @@ export default function VisualMatrixStage({
       [
         dragState.entityId,
         {
-          ...dragState.originalVisual,
+          ...dragState.startVisual,
           gridX: dragState.gridX,
           gridY: dragState.gridY,
         },
@@ -27,32 +28,37 @@ export default function VisualMatrixStage({
     ]);
   }, [dragState]);
 
-  const pointerToGrid = (clientX, clientY) => {
-    const matrix = matrixRef.current;
-    if (!matrix) return null;
-    const rect = matrix.getBoundingClientRect();
-    if (!rect.width || !rect.height) return null;
-    const xRatio = (clientX - rect.left) / rect.width;
-    const yRatio = (clientY - rect.top) / rect.height;
-    return {
-      gridX: clampGrid(Math.floor(xRatio * 12)),
-      gridY: clampGrid(Math.floor(yRatio * 12)),
-    };
-  };
-
   const handleEntityPointerDown = (entityId, event) => {
     if (event.button !== 0) return;
     event.preventDefault();
     const entity = entities.get(entityId);
     if (!entity) return;
-    const initialGrid = pointerToGrid(event.clientX, event.clientY);
+    const matrix = matrixRef.current;
+    if (!matrix) return;
+    const rect = matrix.getBoundingClientRect();
+    const cellWidth = rect.width / 12;
+    const cellHeight = rect.height / 12;
+    if (!cellWidth || !cellHeight) return;
+
+    const cardOriginX = rect.left + entity.visual.gridX * cellWidth;
+    const cardOriginY = rect.top + entity.visual.gridY * cellHeight;
+    const pointerOffsetX = event.clientX - cardOriginX;
+    const pointerOffsetY = event.clientY - cardOriginY;
+
     onSelectEntity(entityId);
-    if (!initialGrid) return;
     setDragState({
       entityId,
-      gridX: initialGrid.gridX,
-      gridY: initialGrid.gridY,
-      originalVisual: entity.visual,
+      gridX: entity.visual.gridX,
+      gridY: entity.visual.gridY,
+      startGridX: entity.visual.gridX,
+      startGridY: entity.visual.gridY,
+      startVisual: entity.visual,
+      startCardOriginX: cardOriginX,
+      startCardOriginY: cardOriginY,
+      pointerOffsetX,
+      pointerOffsetY,
+      cellWidth,
+      cellHeight,
     });
   };
 
@@ -60,12 +66,16 @@ export default function VisualMatrixStage({
     if (!dragState) return undefined;
 
     const handlePointerMove = (event) => {
-      const nextGrid = pointerToGrid(event.clientX, event.clientY);
-      if (!nextGrid) return;
       setDragState((current) => {
         if (!current) return current;
-        if (current.gridX === nextGrid.gridX && current.gridY === nextGrid.gridY) return current;
-        return { ...current, ...nextGrid };
+        const anchoredCardOriginX = event.clientX - current.pointerOffsetX;
+        const anchoredCardOriginY = event.clientY - current.pointerOffsetY;
+        const deltaGridX = (anchoredCardOriginX - current.startCardOriginX) / current.cellWidth;
+        const deltaGridY = (anchoredCardOriginY - current.startCardOriginY) / current.cellHeight;
+        const nextGridX = clampDragGrid(current.startGridX + deltaGridX);
+        const nextGridY = clampDragGrid(current.startGridY + deltaGridY);
+        if (current.gridX === nextGridX && current.gridY === nextGridY) return current;
+        return { ...current, gridX: nextGridX, gridY: nextGridY };
       });
     };
 
@@ -73,16 +83,16 @@ export default function VisualMatrixStage({
       setDragState((current) => {
         if (!current) return current;
         executeAction({
-          type: "SET_VISUAL",
-          entityId: current.entityId,
-          payload: {
-            gridX: current.gridX,
-            gridY: current.gridY,
-            height: current.originalVisual.height,
-            rotation: current.originalVisual.rotation,
-            revealed: current.originalVisual.revealed,
-          },
-        });
+            type: "SET_VISUAL",
+            entityId: current.entityId,
+            payload: {
+              gridX: clampCommitGrid(Math.round(current.gridX)),
+              gridY: clampCommitGrid(Math.round(current.gridY)),
+              height: current.startVisual.height,
+              rotation: current.startVisual.rotation,
+              revealed: current.startVisual.revealed,
+            },
+          });
         return null;
       });
     };
@@ -111,9 +121,18 @@ export default function VisualMatrixStage({
         >
           <div
             ref={matrixRef}
-            className="relative h-full w-full preserve-3d overflow-hidden rounded-xl border border-sky-200/20 bg-[linear-gradient(0deg,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(180deg,#0f172a,#111827)] bg-[size:8.33%_8.33%,8.33%_8.33%,100%_100%] shadow-[0_26px_50px_rgba(0,0,0,0.35)]"
+            className={`relative h-full w-full preserve-3d overflow-hidden rounded-xl border border-sky-200/20 bg-[linear-gradient(0deg,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(180deg,#0f172a,#111827)] bg-[size:8.33%_8.33%,8.33%_8.33%,100%_100%] shadow-[0_26px_50px_rgba(0,0,0,0.35)] ${dragState ? "cursor-grabbing" : ""}`}
           >
             <div className="pointer-events-none absolute inset-x-10 bottom-3 h-5 rounded-full bg-black/35 blur-md" />
+            {dragState ? (
+              <div
+                className="pointer-events-none absolute h-[8.33%] w-[8.33%] rounded-md border border-yellow-200/90 bg-yellow-300/20 shadow-[0_0_14px_rgba(250,204,21,0.6)]"
+                style={{
+                  transform: `translate3d(calc((${dragState.gridX} / 12) * 100%), calc((${dragState.gridY} / 12) * 100%), 0px)`,
+                  transition: "transform 0.05s linear",
+                }}
+              />
+            ) : null}
             {[...entities.values()].map((entity) => (
               <CardEntity
                 key={entity.id}

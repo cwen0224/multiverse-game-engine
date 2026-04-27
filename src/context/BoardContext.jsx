@@ -7,7 +7,7 @@ const BoardContext = createContext(null);
 const createInitialEntity = () => ({
   id: "hero-card",
   visual: {
-    gridX: 1,
+    gridX: 6,
     gridY: 10,
     height: 300,
     rotation: 0,
