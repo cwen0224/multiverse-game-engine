@@ -1,3 +1,5 @@
+export const STAGE_UNITS = 1000;
+
 export const CAMERA_PRESETS = {
   GLOBAL: { key: "GLOBAL", pitch: 20, zoom: 0.68, label: "Global" },
   TACTICAL: { key: "TACTICAL", pitch: 45, zoom: 0.95, label: "Tactical" },
@@ -17,8 +19,8 @@ export const ACTION_TYPES = {
 
 /**
  * @typedef {Object} EntityVisual
- * @property {number} gridX
- * @property {number} gridY
+ * @property {number} x
+ * @property {number} y
  * @property {number} height
  * @property {number} rotation
  * @property {boolean} revealed

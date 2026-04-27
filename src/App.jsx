@@ -14,7 +14,7 @@ function ControlDrawer() {
       executeAction({
         type: "SET_VISUAL",
         entityId: "hero-card",
-        payload: { gridX: 5, gridY: 6, height: 0, revealed: true, rotation: -5 },
+        payload: { x: 500, y: 520, height: 0, revealed: true, rotation: -5 },
       });
     }, 60);
   };
@@ -29,8 +29,8 @@ function ControlDrawer() {
       type: "SET_VISUAL",
       entityId: "hero-card",
       payload: {
-        gridX: Math.floor(Math.random() * 10) + 1,
-        gridY: Math.floor(Math.random() * 10) + 1,
+        x: Math.random() * 880 + 40,
+        y: Math.random() * 880 + 40,
         height: 0,
         rotation: Math.floor(Math.random() * 360),
       },
@@ -54,7 +54,7 @@ function ControlDrawer() {
       executeAction({
         type: "MOVE_ENTITY",
         entityId: "hero-card",
-        payload: { gridX: 99, gridY: 99, height: 0 },
+        payload: { x: 1400, y: 1400, height: 0 },
       });
     } catch (error) {
       window.alert(`Illegal action blocked: ${error.message}`);

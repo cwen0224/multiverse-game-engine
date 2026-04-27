@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { STAGE_UNITS } from "../types/boardTypes";
 import CardEntity from "./CardEntity";
 
-const clampDragGrid = (value) => Math.max(0, Math.min(11.5, value));
-const clampCommitGrid = (value) => Math.max(0, Math.min(11, value));
+const clampStage = (value) => Math.max(0, Math.min(STAGE_UNITS, value));
 
 export default function VisualMatrixStage({
   cameraPreset,
@@ -21,8 +21,8 @@ export default function VisualMatrixStage({
         dragState.entityId,
         {
           ...dragState.startVisual,
-          gridX: dragState.gridX,
-          gridY: dragState.gridY,
+          x: dragState.x,
+          y: dragState.y,
         },
       ],
     ]);
@@ -32,21 +32,18 @@ export default function VisualMatrixStage({
     if (event.button !== 0) return;
     event.preventDefault();
     const entity = entities.get(entityId);
-    if (!entity) return;
     const matrix = matrixRef.current;
-    if (!matrix) return;
+    if (!entity || !matrix) return;
     const rect = matrix.getBoundingClientRect();
-    const cellWidth = rect.width / 12;
-    const cellHeight = rect.height / 12;
-    if (!cellWidth || !cellHeight) return;
+    if (!rect.width || !rect.height) return;
 
     onSelectEntity(entityId);
     setDragState({
       entityId,
-      gridX: entity.visual.gridX,
-      gridY: entity.visual.gridY,
-      startGridX: entity.visual.gridX,
-      startGridY: entity.visual.gridY,
+      x: entity.visual.x,
+      y: entity.visual.y,
+      startX: entity.visual.x,
+      startY: entity.visual.y,
       startVisual: entity.visual,
       startPointerX: event.clientX,
       startPointerY: event.clientY,
@@ -67,12 +64,10 @@ export default function VisualMatrixStage({
         const safeHeight = Math.max(1, current.matrixHeight);
         const pitchCos = Math.cos((cameraPreset.pitch * Math.PI) / 180);
         const pitchCompensation = 1 / Math.max(0.35, pitchCos);
-        const deltaGridX = (deltaX / safeWidth) * 12;
-        const deltaGridY = ((deltaY / safeHeight) * 12) * pitchCompensation;
-        const nextGridX = clampDragGrid(current.startGridX + deltaGridX);
-        const nextGridY = clampDragGrid(current.startGridY + deltaGridY);
-        if (current.gridX === nextGridX && current.gridY === nextGridY) return current;
-        return { ...current, gridX: nextGridX, gridY: nextGridY };
+        const nextX = clampStage(current.startX + (deltaX / safeWidth) * STAGE_UNITS);
+        const nextY = clampStage(current.startY + ((deltaY / safeHeight) * STAGE_UNITS) * pitchCompensation);
+        if (current.x === nextX && current.y === nextY) return current;
+        return { ...current, x: nextX, y: nextY };
       });
     };
 
@@ -80,16 +75,16 @@ export default function VisualMatrixStage({
       setDragState((current) => {
         if (!current) return current;
         executeAction({
-            type: "SET_VISUAL",
-            entityId: current.entityId,
-            payload: {
-              gridX: clampCommitGrid(Math.round(current.gridX)),
-              gridY: clampCommitGrid(Math.round(current.gridY)),
-              height: current.startVisual.height,
-              rotation: current.startVisual.rotation,
-              revealed: current.startVisual.revealed,
-            },
-          });
+          type: "SET_VISUAL",
+          entityId: current.entityId,
+          payload: {
+            x: current.x,
+            y: current.y,
+            height: current.startVisual.height,
+            rotation: current.startVisual.rotation,
+            revealed: current.startVisual.revealed,
+          },
+        });
         return null;
       });
     };
@@ -118,18 +113,15 @@ export default function VisualMatrixStage({
         >
           <div
             ref={matrixRef}
-            className={`relative h-full w-full preserve-3d overflow-hidden rounded-xl border border-sky-200/20 bg-[linear-gradient(0deg,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(180deg,#0f172a,#111827)] bg-[size:8.33%_8.33%,8.33%_8.33%,100%_100%] shadow-[0_26px_50px_rgba(0,0,0,0.35)] ${dragState ? "cursor-grabbing" : ""}`}
+            className={`relative h-full w-full preserve-3d overflow-hidden rounded-xl border border-slate-200/15 shadow-[0_30px_70px_rgba(0,0,0,0.45)] ${dragState ? "cursor-grabbing" : ""}`}
+            style={{
+              backgroundColor: "#0d1a30",
+              backgroundImage:
+                "radial-gradient(circle at center, rgba(148,163,184,0.22) 0.7px, transparent 0.7px), linear-gradient(180deg, rgba(13,26,48,0.95), rgba(7,15,28,0.98))",
+              backgroundSize: "12px 12px, 100% 100%",
+            }}
           >
-            <div className="pointer-events-none absolute inset-x-10 bottom-3 h-5 rounded-full bg-black/35 blur-md" />
-            {dragState ? (
-              <div
-                className="pointer-events-none absolute h-[8.33%] w-[8.33%] rounded-md border border-yellow-200/90 bg-yellow-300/20 shadow-[0_0_14px_rgba(250,204,21,0.6)]"
-                style={{
-                  transform: `translate3d(calc((${dragState.gridX} / 12) * 100%), calc((${dragState.gridY} / 12) * 100%), 0px)`,
-                  transition: "transform 0.05s linear",
-                }}
-              />
-            ) : null}
+            <div className="pointer-events-none absolute inset-x-8 bottom-2 h-6 rounded-full bg-black/35 blur-md" />
             {[...entities.values()].map((entity) => (
               <CardEntity
                 key={entity.id}
@@ -142,6 +134,16 @@ export default function VisualMatrixStage({
                 isDragging={dragState?.entityId === entity.id}
               />
             ))}
+            {dragState ? (
+              <div
+                className="pointer-events-none absolute rounded-full bg-black/45 blur-md"
+                style={{
+                  width: "calc((110 / 1000) * 100%)",
+                  height: "calc((36 / 1000) * 100%)",
+                  transform: `translate3d(calc((${dragState.x} / 1000) * 100%), calc((${dragState.y + 95} / 1000) * 100%), 0px)`,
+                }}
+              />
+            ) : null}
           </div>
         </div>
       </div>

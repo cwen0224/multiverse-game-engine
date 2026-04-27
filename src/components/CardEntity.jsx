@@ -9,22 +9,34 @@ export default function CardEntity({
   visualOverride,
   isDragging,
 }) {
+  const CARD_WIDTH_UNITS = 78;
+  const CARD_HEIGHT_UNITS = 112;
   const visual = visualOverride ?? entity.visual;
   const isTapped = entity.states.includes("TAPPED");
   const isFrozen = entity.states.includes("FROZEN");
   const effectiveRotation = visual.rotation + (isTapped ? 90 : 0);
   const hpValue = entity.properties.HP ?? "-";
   const xpValue = entity.properties.XP ?? "-";
+  const filters = [isDragging
+    ? "drop-shadow(0 18px 16px rgba(0, 0, 0, 0.5))"
+    : "drop-shadow(0 8px 8px rgba(0, 0, 0, 0.3))"];
+  if (isFrozen) {
+    filters.push("saturate(0.8)", "brightness(0.86)");
+  }
 
   const cardStyle = {
-    "--gridX": visual.gridX,
-    "--gridY": visual.gridY,
+    "--x": visual.x,
+    "--y": visual.y,
     "--height": visual.height,
     "--rotation": effectiveRotation,
+    "--cardWidth": CARD_WIDTH_UNITS,
+    "--cardHeight": CARD_HEIGHT_UNITS,
+    width: "calc((var(--cardWidth) / 1000) * 100%)",
+    height: "calc((var(--cardHeight) / 1000) * 100%)",
     transform:
-      "translate3d(calc((var(--gridX) / 12) * 100%), calc((var(--gridY) / 12) * 100%), calc(var(--height) * 1px)) rotateZ(calc(var(--rotation) * 1deg))",
+      "translate3d(calc((var(--x) / 1000) * 100%), calc((var(--y) / 1000) * 100%), calc(var(--height) * 1px)) rotateZ(calc(var(--rotation) * 1deg))",
     transition: isDragging ? "none" : "transform 0.4s ease-out",
-    filter: isFrozen ? "saturate(0.8) brightness(0.86)" : "none",
+    filter: filters.join(" "),
   };
 
   return (
@@ -32,7 +44,7 @@ export default function CardEntity({
       type="button"
       onClick={() => onSelect(entity.id)}
       onPointerDown={(event) => onPointerDown(entity.id, event)}
-      className="absolute left-0 top-0 h-[8.33%] w-[8.33%] preserve-3d cursor-grab text-left active:cursor-grabbing"
+      className="absolute left-0 top-0 preserve-3d cursor-grab text-left active:cursor-grabbing"
       style={cardStyle}
     >
       <div className="pointer-events-none absolute -top-7 left-1 flex gap-1 preserve-3d">

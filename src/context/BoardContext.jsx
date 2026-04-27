@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { ACTION_TYPES, CAMERA_PRESETS } from "../types/boardTypes";
+import { ACTION_TYPES, CAMERA_PRESETS, STAGE_UNITS } from "../types/boardTypes";
 import { addLog, clearLogs, getLogsSnapshot, subscribeLogs } from "../store/logStore";
 
 const BoardContext = createContext(null);
@@ -7,8 +7,8 @@ const BoardContext = createContext(null);
 const createInitialEntity = () => ({
   id: "hero-card",
   visual: {
-    gridX: 6,
-    gridY: 10,
+    x: 500,
+    y: 860,
     height: 300,
     rotation: 0,
     revealed: false,
@@ -28,7 +28,7 @@ const createInitialEntity = () => ({
 });
 
 const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
-const isValidGrid = (value) => Number.isInteger(value) && value >= 0 && value < 12;
+const isValidStageCoordinate = (value) => isNumber(value) && value >= 0 && value <= STAGE_UNITS;
 const isPropertyValue = (value) => typeof value === "number" || typeof value === "string";
 
 function parseAction(actionJSON) {
@@ -85,24 +85,24 @@ export function BoardProvider({ children }) {
       }
 
       if (action.type === ACTION_TYPES.MOVE_ENTITY) {
-        const { gridX, gridY, height = 0 } = action.payload ?? {};
-        if (!isValidGrid(gridX) || !isValidGrid(gridY)) {
-          throw new Error(`MOVE_ENTITY grid out of range: (${gridX}, ${gridY}). Expected 0-11.`);
+        const { x, y, height = 0 } = action.payload ?? {};
+        if (!isValidStageCoordinate(x) || !isValidStageCoordinate(y)) {
+          throw new Error(`MOVE_ENTITY x/y out of range: (${x}, ${y}). Expected 0-${STAGE_UNITS}.`);
         }
         if (!isNumber(height)) {
           throw new Error("MOVE_ENTITY payload.height must be a finite number.");
         }
         updateEntity(entityId, (current) => ({
           ...current,
-          visual: { ...current.visual, gridX, gridY, height },
+          visual: { ...current.visual, x, y, height },
         }));
       } else if (action.type === ACTION_TYPES.SET_VISUAL) {
         const nextVisual = action.payload ?? {};
-        if (nextVisual.gridX !== undefined && !isValidGrid(nextVisual.gridX)) {
-          throw new Error("SET_VISUAL payload.gridX must be an integer between 0 and 11.");
+        if (nextVisual.x !== undefined && !isValidStageCoordinate(nextVisual.x)) {
+          throw new Error(`SET_VISUAL payload.x must be between 0 and ${STAGE_UNITS}.`);
         }
-        if (nextVisual.gridY !== undefined && !isValidGrid(nextVisual.gridY)) {
-          throw new Error("SET_VISUAL payload.gridY must be an integer between 0 and 11.");
+        if (nextVisual.y !== undefined && !isValidStageCoordinate(nextVisual.y)) {
+          throw new Error(`SET_VISUAL payload.y must be between 0 and ${STAGE_UNITS}.`);
         }
         if (nextVisual.height !== undefined && !isNumber(nextVisual.height)) {
           throw new Error("SET_VISUAL payload.height must be a finite number.");
