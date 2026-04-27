@@ -4,28 +4,92 @@ import { addLog, clearLogs, getLogsSnapshot, subscribeLogs } from "../store/logS
 
 const BoardContext = createContext(null);
 
-const createInitialEntity = () => ({
-  id: "hero-card",
+const createEntity = (id, name, type, ownerId, visual, properties = {}) => ({
+  id,
+  metadata: {
+    name,
+    type,
+    ownerId,
+  },
   visual: {
     x: 500,
     y: 500,
     height: 0,
     rotation: 0,
     revealed: false,
-  },
-  metadata: {
-    name: "Astra Vanguard",
-    type: "MONSTER",
-    ownerId: "PLAYER_1",
+    ...visual,
   },
   properties: {
     HP: 12,
     XP: 0,
     ATK: 4,
     Mana: 2,
+    ...properties,
   },
   states: [],
 });
+
+const createInitialEntityMap = () =>
+  new Map([
+    [
+      "hero-card",
+      {
+        ...createEntity(
+          "hero-card",
+          "Astra Vanguard",
+          "MONSTER",
+          "PLAYER_1",
+          { x: 500, y: 500, height: 0, rotation: 0, revealed: true },
+          { HP: 12, ATK: 4, Mana: 2, XP: 0 }
+        ),
+      },
+    ],
+    [
+      "p1-hand-1",
+      {
+        ...createEntity("p1-hand-1", "Nova Knight", "MONSTER", "PLAYER_1", { revealed: true }, { HP: 8, ATK: 3 }),
+      },
+    ],
+    [
+      "p1-hand-2",
+      {
+        ...createEntity("p1-hand-2", "Aether Burst", "SPELL", "PLAYER_1", { revealed: true }, { Mana: 3, Cost: 2 }),
+      },
+    ],
+    [
+      "p1-hand-3",
+      {
+        ...createEntity("p1-hand-3", "Iron Bulwark", "LAND", "PLAYER_1", { revealed: true }, { DEF: 6 }),
+      },
+    ],
+    [
+      "p1-hand-4",
+      {
+        ...createEntity("p1-hand-4", "Sapphire Drake", "MONSTER", "PLAYER_1", { revealed: true }, { HP: 7, ATK: 5 }),
+      },
+    ],
+    [
+      "op-hand-1",
+      {
+        ...createEntity("op-hand-1", "Unknown", "HIDDEN", "PLAYER_2", { revealed: false }),
+      },
+    ],
+    [
+      "op-hand-2",
+      {
+        ...createEntity("op-hand-2", "Unknown", "HIDDEN", "PLAYER_2", { revealed: false }),
+      },
+    ],
+    [
+      "op-hand-3",
+      {
+        ...createEntity("op-hand-3", "Unknown", "HIDDEN", "PLAYER_2", { revealed: false }),
+      },
+    ],
+  ]);
+
+const INITIAL_PLAYER_HAND = ["p1-hand-1", "p1-hand-2", "p1-hand-3", "p1-hand-4"];
+const INITIAL_OPPONENT_HAND = ["op-hand-1", "op-hand-2", "op-hand-3"];
 
 const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
 const isValidStageCoordinate = (value) => isNumber(value) && value >= 0 && value <= STAGE_UNITS;
@@ -56,7 +120,9 @@ function validateActionShape(action) {
 
 export function BoardProvider({ children }) {
   const [cameraMode, setCameraMode] = useState("TACTICAL");
-  const [entities, setEntities] = useState(new Map([["hero-card", createInitialEntity()]]));
+  const [entities, setEntities] = useState(createInitialEntityMap());
+  const [playerHand, setPlayerHand] = useState(INITIAL_PLAYER_HAND);
+  const [opponentHand, setOpponentHand] = useState(INITIAL_OPPONENT_HAND);
   const [selectedEntityId, setSelectedEntityId] = useState("hero-card");
   const [logs, setLogs] = useState(getLogsSnapshot());
 
@@ -206,8 +272,30 @@ export function BoardProvider({ children }) {
     }
   };
 
+  const playCardFromHand = (entityId, visual) => {
+    const { x, y } = visual ?? {};
+    if (!isValidStageCoordinate(x) || !isValidStageCoordinate(y)) {
+      throw new Error(`playCardFromHand invalid target coordinate: (${x}, ${y}).`);
+    }
+    setPlayerHand((prev) => {
+      if (!prev.includes(entityId)) {
+        throw new Error(`Card "${entityId}" is not in player hand.`);
+      }
+      return prev.filter((id) => id !== entityId);
+    });
+    updateEntityVisual(entityId, {
+      x,
+      y,
+      height: 0,
+      revealed: true,
+    });
+    addLog("INFO", `Card "${entityId}" played from hand to table.`, { entityId, x, y });
+  };
+
   const resetDemo = () => {
-    setEntities(new Map([["hero-card", createInitialEntity()]]));
+    setEntities(createInitialEntityMap());
+    setPlayerHand(INITIAL_PLAYER_HAND);
+    setOpponentHand(INITIAL_OPPONENT_HAND);
     setSelectedEntityId("hero-card");
     addLog("WARN", "Demo reset to initial entity state.");
   };
@@ -219,14 +307,17 @@ export function BoardProvider({ children }) {
       setCameraMode,
       cameraPresets: CAMERA_PRESETS,
       entities,
+      playerHand,
+      opponentHand,
       selectedEntityId,
       setSelectedEntityId,
       executeAction,
+      playCardFromHand,
       logs,
       clearLogs,
       resetDemo,
     }),
-    [cameraMode, entities, logs, selectedEntityId]
+    [cameraMode, entities, logs, opponentHand, playerHand, selectedEntityId]
   );
 
   return <BoardContext.Provider value={value}>{children}</BoardContext.Provider>;

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { BoardProvider, useBoard, useBoardCamera } from "./context/BoardContext";
 import DebugConsole from "./components/DebugConsole";
+import HandZones from "./components/HandZones";
 import VisualMatrixStage from "./components/VisualMatrixStage";
 
-const ENGINE_VERSION = "v0.2.5 - Space Expansion";
+const ENGINE_VERSION = "v0.2.8 - Hand Zone Alpha";
 
 function ControlDrawer() {
   const { cameraMode, cameraPresets, setCameraMode } = useBoardCamera();
@@ -147,9 +148,20 @@ function ControlDrawer() {
 }
 
 function BoardScreen() {
-  const { entities, selectedEntityId, setSelectedEntityId, executeAction, logs, clearLogs } = useBoard();
+  const {
+    entities,
+    playerHand,
+    opponentHand,
+    selectedEntityId,
+    setSelectedEntityId,
+    executeAction,
+    playCardFromHand,
+    logs,
+    clearLogs,
+  } = useBoard();
   const { cameraPreset } = useBoardCamera();
   const [isUiVisible, setIsUiVisible] = useState(true);
+  const [matrixRect, setMatrixRect] = useState(null);
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -181,6 +193,15 @@ function BoardScreen() {
         selectedEntityId={selectedEntityId}
         onSelectEntity={setSelectedEntityId}
         executeAction={executeAction}
+        hiddenEntityIds={[...playerHand, ...opponentHand]}
+        onMatrixRectChange={setMatrixRect}
+      />
+      <HandZones
+        entities={entities}
+        playerHand={playerHand}
+        opponentHand={opponentHand}
+        matrixRect={matrixRect}
+        onPlayFromHand={playCardFromHand}
       />
       {isUiVisible ? <ControlDrawer /> : null}
       {isUiVisible ? (

@@ -10,6 +10,8 @@ export default function VisualMatrixStage({
   selectedEntityId,
   onSelectEntity,
   executeAction,
+  hiddenEntityIds = [],
+  onMatrixRectChange,
 }) {
   const matrixRef = useRef(null);
   const [dragState, setDragState] = useState(null);
@@ -30,6 +32,7 @@ export default function VisualMatrixStage({
     0.2,
     Math.min((viewport.width * 0.86) / STAGE_UNITS, (viewport.height * 0.86) / STAGE_UNITS)
   );
+  const hiddenSet = useMemo(() => new Set(hiddenEntityIds), [hiddenEntityIds]);
 
   const dragPreviewById = useMemo(() => {
     if (!dragState) return new Map();
@@ -116,6 +119,11 @@ export default function VisualMatrixStage({
     };
   }, [cameraPreset.pitch, dragState, executeAction]);
 
+  useEffect(() => {
+    if (!onMatrixRectChange || !matrixRef.current) return;
+    onMatrixRectChange(matrixRef.current.getBoundingClientRect());
+  }, [cameraPreset.pitch, onMatrixRectChange, viewport.height, viewport.width]);
+
   return (
     <section className="relative h-full w-full overflow-hidden">
       <div className="absolute inset-0 overflow-hidden" style={{ perspective: "1500px" }}>
@@ -139,7 +147,9 @@ export default function VisualMatrixStage({
             }}
           >
             <div className="pointer-events-none absolute inset-x-8 bottom-2 h-6 rounded-full bg-black/35 blur-md" />
-            {[...entities.values()].map((entity) => (
+            {[...entities.values()]
+              .filter((entity) => !hiddenSet.has(entity.id))
+              .map((entity) => (
               <CardEntity
                 key={entity.id}
                 entity={entity}
