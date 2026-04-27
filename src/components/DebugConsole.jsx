@@ -54,7 +54,7 @@ export default function DebugConsole({
   };
 
   return (
-    <aside className="fixed right-4 top-4 z-40 w-[360px] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200/20 bg-slate-950/90 shadow-2xl backdrop-blur">
+    <aside className="fixed bottom-20 right-4 z-40 w-[360px] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200/20 bg-slate-950/75 shadow-2xl backdrop-blur-md">
       <div className="flex items-center justify-between border-b border-slate-200/10 px-3 py-2">
         <h2 className="text-sm font-bold text-slate-100">Dispatcher Console</h2>
         <button
