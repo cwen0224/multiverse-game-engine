@@ -16,7 +16,7 @@ function HandCard({ entity, isOpponent, onPointerDown }) {
       className={`group relative h-36 w-24 rounded-lg border text-left shadow-2xl transition-transform ${
         isOpponent
           ? "scale-[0.6] border-slate-300/35 bg-gradient-to-br from-slate-700 to-slate-900"
-          : "border-amber-200/60 bg-gradient-to-br from-amber-200 to-orange-500 text-slate-900 hover:z-20 hover:-translate-y-4 hover:scale-110"
+          : "border-amber-200/60 bg-gradient-to-br from-amber-200 to-orange-500 text-slate-900 hover:z-20 hover:-translate-y-5 hover:scale-120"
       }`}
     >
       {isOpponent ? (

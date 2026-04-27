@@ -39,6 +39,7 @@ export default function CardEntity({
       "translate3d(-50%, -50%, calc(var(--height) * 1px)) rotateZ(calc(var(--rotation) * 1deg))",
     transition: isDragging ? "none" : "transform 0.4s ease-out",
     filter: filters.join(" "),
+    zIndex: isDragging ? 999 : isSelected ? 120 : 20,
   };
 
   return (

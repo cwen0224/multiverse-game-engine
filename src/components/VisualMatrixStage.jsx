@@ -125,8 +125,8 @@ export default function VisualMatrixStage({
   }, [cameraPreset.pitch, onMatrixRectChange, viewport.height, viewport.width]);
 
   return (
-    <section className="relative h-full w-full overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden" style={{ perspective: "1500px" }}>
+    <section className="relative h-full w-full">
+      <div className="absolute inset-0" style={{ perspective: "1500px" }}>
         <div
           className="absolute left-1/2 top-1/2 preserve-3d"
           style={{
@@ -138,12 +138,12 @@ export default function VisualMatrixStage({
         >
           <div
             ref={matrixRef}
-            className={`relative h-full w-full preserve-3d overflow-hidden rounded-xl border border-slate-200/15 shadow-[0_30px_70px_rgba(0,0,0,0.45)] ${dragState ? "cursor-grabbing" : ""}`}
+            className={`relative h-full w-full preserve-3d rounded-xl border border-cyan-200/45 shadow-[0_40px_90px_rgba(0,0,0,0.65),0_0_20px_rgba(56,189,248,0.25)] ${dragState ? "cursor-grabbing" : ""}`}
             style={{
-              backgroundColor: "#0d1a30",
+              backgroundColor: "#1a202d",
               backgroundImage:
-                "radial-gradient(circle at center, rgba(148,163,184,0.22) 0.7px, transparent 0.7px), linear-gradient(180deg, rgba(13,26,48,0.95), rgba(7,15,28,0.98))",
-              backgroundSize: "12px 12px, 100% 100%",
+                "radial-gradient(circle at center, rgba(226,232,240,0.15) 0.65px, transparent 0.65px), linear-gradient(180deg, rgba(36,44,59,0.95), rgba(24,30,42,0.98))",
+              backgroundSize: "11px 11px, 100% 100%",
             }}
           >
             <div className="pointer-events-none absolute inset-x-8 bottom-2 h-6 rounded-full bg-black/35 blur-md" />

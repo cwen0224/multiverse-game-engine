@@ -4,7 +4,7 @@ import DebugConsole from "./components/DebugConsole";
 import HandZones from "./components/HandZones";
 import VisualMatrixStage from "./components/VisualMatrixStage";
 
-const ENGINE_VERSION = "v0.2.8 - Hand Zone Alpha";
+const ENGINE_VERSION = "v0.2.8 - Hand & Visual Fix";
 
 function ControlDrawer() {
   const { cameraMode, cameraPresets, setCameraMode } = useBoardCamera();
