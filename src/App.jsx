@@ -84,7 +84,7 @@ function DemoControls() {
   };
 
   return (
-    <div className="mx-auto mb-6 flex w-full max-w-5xl flex-wrap items-center gap-2">
+    <div className="flex max-w-[min(92vw,980px)] flex-wrap items-center gap-2 rounded-xl border border-slate-200/15 bg-slate-900/65 p-2 shadow-xl backdrop-blur">
       {Object.values(cameraPresets).map((preset) => (
         <button
           key={preset.key}
@@ -131,13 +131,16 @@ function BoardScreen() {
   const { cameraPreset } = useBoardCamera();
 
   return (
-    <main className="min-h-screen p-4 md:p-8">
-      <header className="mx-auto mb-4 w-full max-w-5xl">
+    <main className="relative h-screen w-screen overflow-hidden">
+      <header className="pointer-events-none absolute left-4 top-3 z-20 max-w-[min(92vw,900px)]">
         <h1 className="text-2xl font-bold text-sky-100 md:text-3xl">The Multiverse Game Engine</h1>
         <p className="text-sm text-sky-100/80 md:text-base">Phase 1 Visual Matrix Stage / Data-driven CSS 3D transitions</p>
       </header>
 
-      <DemoControls />
+      <div className="absolute left-4 top-24 z-20">
+        <DemoControls />
+      </div>
+
       <VisualMatrixStage
         cameraPreset={cameraPreset}
         entities={entities}
