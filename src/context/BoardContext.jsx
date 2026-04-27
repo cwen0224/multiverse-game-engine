@@ -8,8 +8,8 @@ const createInitialEntity = () => ({
   id: "hero-card",
   visual: {
     x: 500,
-    y: 860,
-    height: 300,
+    y: 500,
+    height: 0,
     rotation: 0,
     revealed: false,
   },
@@ -74,6 +74,30 @@ export function BoardProvider({ children }) {
     });
   };
 
+  const updateEntityVisual = (entityId, nextVisualPatch) => {
+    setEntities((prevMap) => {
+      const current = prevMap.get(entityId);
+      if (!current) {
+        throw new Error(`Entity "${entityId}" does not exist.`);
+      }
+
+      const currentVisual = current.visual;
+      const nextVisual = { ...currentVisual, ...nextVisualPatch };
+      const xDiff = Math.abs((nextVisual.x ?? currentVisual.x) - currentVisual.x);
+      const yDiff = Math.abs((nextVisual.y ?? currentVisual.y) - currentVisual.y);
+      const sameHeight = nextVisual.height === currentVisual.height;
+      const sameRotation = nextVisual.rotation === currentVisual.rotation;
+      const sameReveal = nextVisual.revealed === currentVisual.revealed;
+      if (xDiff < 0.1 && yDiff < 0.1 && sameHeight && sameRotation && sameReveal) {
+        return prevMap;
+      }
+
+      const nextMap = new Map(prevMap);
+      nextMap.set(entityId, { ...current, visual: nextVisual });
+      return nextMap;
+    });
+  };
+
   const executeAction = (actionJSON) => {
     let action = null;
     try {
@@ -92,10 +116,7 @@ export function BoardProvider({ children }) {
         if (!isNumber(height)) {
           throw new Error("MOVE_ENTITY payload.height must be a finite number.");
         }
-        updateEntity(entityId, (current) => ({
-          ...current,
-          visual: { ...current.visual, x, y, height },
-        }));
+        updateEntityVisual(entityId, { x, y, height });
       } else if (action.type === ACTION_TYPES.SET_VISUAL) {
         const nextVisual = action.payload ?? {};
         if (nextVisual.x !== undefined && !isValidStageCoordinate(nextVisual.x)) {
@@ -113,10 +134,7 @@ export function BoardProvider({ children }) {
         if (nextVisual.revealed !== undefined && typeof nextVisual.revealed !== "boolean") {
           throw new Error("SET_VISUAL payload.revealed must be boolean.");
         }
-        updateEntity(entityId, (current) => ({
-          ...current,
-          visual: { ...current.visual, ...nextVisual },
-        }));
+        updateEntityVisual(entityId, nextVisual);
       } else if (action.type === ACTION_TYPES.SET_PROPERTY) {
         const { key, value } = action.payload ?? {};
         if (typeof key !== "string" || !key) {

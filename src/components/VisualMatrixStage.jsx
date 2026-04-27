@@ -13,6 +13,23 @@ export default function VisualMatrixStage({
 }) {
   const matrixRef = useRef(null);
   const [dragState, setDragState] = useState(null);
+  const [viewport, setViewport] = useState({
+    width: typeof window === "undefined" ? 1280 : window.innerWidth,
+    height: typeof window === "undefined" ? 720 : window.innerHeight,
+  });
+
+  useEffect(() => {
+    const onResize = () => {
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const autoFitScale = Math.max(
+    0.2,
+    Math.min((viewport.width * 0.86) / STAGE_UNITS, (viewport.height * 0.86) / STAGE_UNITS)
+  );
 
   const dragPreviewById = useMemo(() => {
     if (!dragState) return new Map();
@@ -101,14 +118,14 @@ export default function VisualMatrixStage({
 
   return (
     <section className="relative h-full w-full overflow-hidden">
-      <div className="absolute inset-0 flex items-center justify-center overflow-hidden" style={{ perspective: "1500px" }}>
+      <div className="absolute inset-0 overflow-hidden" style={{ perspective: "1500px" }}>
         <div
-          className="relative preserve-3d"
+          className="absolute left-1/2 top-1/2 preserve-3d"
           style={{
-            width: "min(85vw, 85vh)",
-            height: "min(85vw, 85vh)",
+            width: `${STAGE_UNITS}px`,
+            height: `${STAGE_UNITS}px`,
             transition: "transform 0.45s ease-out",
-            transform: `rotateX(${cameraPreset.pitch}deg) scale(${cameraPreset.zoom})`,
+            transform: `translate(-50%, -50%) rotateX(${cameraPreset.pitch}deg) scale(${autoFitScale * cameraPreset.zoom})`,
           }}
         >
           <div

@@ -33,8 +33,10 @@ export default function CardEntity({
     "--cardHeight": CARD_HEIGHT_UNITS,
     width: "calc((var(--cardWidth) / 1000) * 100%)",
     height: "calc((var(--cardHeight) / 1000) * 100%)",
+    left: "calc((var(--x) / 1000) * 100%)",
+    top: "calc((var(--y) / 1000) * 100%)",
     transform:
-      "translate3d(calc((var(--x) / 1000) * 100%), calc((var(--y) / 1000) * 100%), calc(var(--height) * 1px)) rotateZ(calc(var(--rotation) * 1deg))",
+      "translate3d(-50%, -50%, calc(var(--height) * 1px)) rotateZ(calc(var(--rotation) * 1deg))",
     transition: isDragging ? "none" : "transform 0.4s ease-out",
     filter: filters.join(" "),
   };
@@ -44,7 +46,7 @@ export default function CardEntity({
       type="button"
       onClick={() => onSelect(entity.id)}
       onPointerDown={(event) => onPointerDown(entity.id, event)}
-      className="absolute left-0 top-0 preserve-3d cursor-grab text-left active:cursor-grabbing"
+      className="absolute preserve-3d cursor-grab text-left active:cursor-grabbing"
       style={cardStyle}
     >
       <div className="pointer-events-none absolute -top-7 left-1 flex gap-1 preserve-3d">

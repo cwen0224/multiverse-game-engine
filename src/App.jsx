@@ -3,6 +3,8 @@ import { BoardProvider, useBoard, useBoardCamera } from "./context/BoardContext"
 import DebugConsole from "./components/DebugConsole";
 import VisualMatrixStage from "./components/VisualMatrixStage";
 
+const ENGINE_VERSION = "v0.2.5 - Space Expansion";
+
 function ControlDrawer() {
   const { cameraMode, cameraPresets, setCameraMode } = useBoardCamera();
   const { executeAction, resetDemo } = useBoard();
@@ -163,8 +165,11 @@ function BoardScreen() {
 
   return (
     <main className="relative h-screen w-screen overflow-hidden">
+      <div className="pointer-events-none absolute left-4 z-30 rounded-md border border-slate-100/25 bg-slate-900/45 px-3 py-1 text-xs font-semibold tracking-wide text-slate-100 backdrop-blur-md top-3">
+        {ENGINE_VERSION}
+      </div>
       {isUiVisible ? (
-        <header className="pointer-events-none absolute left-4 top-3 z-20 max-w-[min(92vw,900px)]">
+        <header className="pointer-events-none absolute left-4 top-10 z-20 max-w-[min(92vw,900px)]">
           <h1 className="text-2xl font-bold text-sky-100 md:text-3xl">The Multiverse Game Engine</h1>
           <p className="text-sm text-sky-100/80 md:text-base">Phase 2 Visual Matrix / Press H for clean mode</p>
         </header>
