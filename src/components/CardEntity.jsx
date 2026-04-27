@@ -7,6 +7,7 @@ export default function CardEntity({
   onSelect,
   onPointerDown,
   visualOverride,
+  isDragging,
 }) {
   const visual = visualOverride ?? entity.visual;
   const isTapped = entity.states.includes("TAPPED");
@@ -22,7 +23,7 @@ export default function CardEntity({
     "--rotation": effectiveRotation,
     transform:
       "translate3d(calc((var(--gridX) / 12) * 100%), calc((var(--gridY) / 12) * 100%), calc(var(--height) * 1px)) rotateZ(calc(var(--rotation) * 1deg))",
-    transition: "transform 0.4s ease-out",
+    transition: isDragging ? "none" : "transform 0.4s ease-out",
     filter: isFrozen ? "saturate(0.8) brightness(0.86)" : "none",
   };
 

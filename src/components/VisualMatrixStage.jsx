@@ -40,11 +40,6 @@ export default function VisualMatrixStage({
     const cellHeight = rect.height / 12;
     if (!cellWidth || !cellHeight) return;
 
-    const cardOriginX = rect.left + entity.visual.gridX * cellWidth;
-    const cardOriginY = rect.top + entity.visual.gridY * cellHeight;
-    const pointerOffsetX = event.clientX - cardOriginX;
-    const pointerOffsetY = event.clientY - cardOriginY;
-
     onSelectEntity(entityId);
     setDragState({
       entityId,
@@ -53,12 +48,10 @@ export default function VisualMatrixStage({
       startGridX: entity.visual.gridX,
       startGridY: entity.visual.gridY,
       startVisual: entity.visual,
-      startCardOriginX: cardOriginX,
-      startCardOriginY: cardOriginY,
-      pointerOffsetX,
-      pointerOffsetY,
-      cellWidth,
-      cellHeight,
+      startPointerX: event.clientX,
+      startPointerY: event.clientY,
+      matrixWidth: rect.width,
+      matrixHeight: rect.height,
     });
   };
 
@@ -68,10 +61,14 @@ export default function VisualMatrixStage({
     const handlePointerMove = (event) => {
       setDragState((current) => {
         if (!current) return current;
-        const anchoredCardOriginX = event.clientX - current.pointerOffsetX;
-        const anchoredCardOriginY = event.clientY - current.pointerOffsetY;
-        const deltaGridX = (anchoredCardOriginX - current.startCardOriginX) / current.cellWidth;
-        const deltaGridY = (anchoredCardOriginY - current.startCardOriginY) / current.cellHeight;
+        const deltaX = event.clientX - current.startPointerX;
+        const deltaY = event.clientY - current.startPointerY;
+        const safeWidth = Math.max(1, current.matrixWidth);
+        const safeHeight = Math.max(1, current.matrixHeight);
+        const pitchCos = Math.cos((cameraPreset.pitch * Math.PI) / 180);
+        const pitchCompensation = 1 / Math.max(0.35, pitchCos);
+        const deltaGridX = (deltaX / safeWidth) * 12;
+        const deltaGridY = ((deltaY / safeHeight) * 12) * pitchCompensation;
         const nextGridX = clampDragGrid(current.startGridX + deltaGridX);
         const nextGridY = clampDragGrid(current.startGridY + deltaGridY);
         if (current.gridX === nextGridX && current.gridY === nextGridY) return current;
@@ -105,7 +102,7 @@ export default function VisualMatrixStage({
       window.removeEventListener("pointerup", commitDrag);
       window.removeEventListener("pointercancel", commitDrag);
     };
-  }, [dragState, executeAction]);
+  }, [cameraPreset.pitch, dragState, executeAction]);
 
   return (
     <section className="relative h-full w-full overflow-hidden">
@@ -142,6 +139,7 @@ export default function VisualMatrixStage({
                 onSelect={onSelectEntity}
                 onPointerDown={handleEntityPointerDown}
                 visualOverride={dragPreviewById.get(entity.id)}
+                isDragging={dragState?.entityId === entity.id}
               />
             ))}
           </div>
